@@ -102,3 +102,19 @@ export OPENAI_API_KEY=...            # Sports / Toys / CDs 프로필 생성용 (
 - 소요 시간은 대략 사용자·아이템 수에 비례: Beauty 기준 align 약 6.5시간(전 깊이, epoch 13분), 측정기 0.5시간, 깊이 검정 1시간, 추천기 2~3시간.
 - **CDs 주의:** 아이템 6.4만 개라 추천기 전 아이템 채점과 align 메모리가 Beauty의 수 배이다. 48GB GPU에서 OOM이 나면 `train_eval.sh`/평가 배치 크기를 줄여야 한다(설정 변경이므로 기록할 것). align epoch도 Beauty의 약 5배로 예상.
 - 결과: `work/results/done.log`(단계별 기록), `code/rec/results/V3F_Perm_<ds>_r2023_final.json`(test R@5/10, N@5/10).
+
+## 긴 학습을 중간에 끊기 (map / align)
+
+FACE 학습 코드는 원래 최고 epoch 가중치를 메모리에만 두고 학습이 끝날 때 한 번 저장한다. 이 패키지의
+`code/face/encoder/trainer/trainer.py`는 검증 recall@20이 갱신될 때마다 그 상태를 `<체크포인트>.pth.inprogress`에도 쓴다.
+학습 규칙과 최종 결과는 원본과 같고(정상 종료 시 같은 가중치가 `<체크포인트>.pth`로 저장되고 `.inprogress`는 지워짐), 저장 시점만 추가된다.
+
+곡선이 평평해져서 일찍 끝내고 싶으면:
+```bash
+kill <train_encoder.py PID>                                   # run_all.sh도 함께 멈춤
+mv code/face/encoder/checkpoint/lightgcn_rqvq/lightgcn_rqvq-<ds>_face-2023_v3f.pth.inprogress \
+   code/face/encoder/checkpoint/lightgcn_rqvq/lightgcn_rqvq-<ds>_face-2023_v3f.pth
+./run_datasets.sh <ds>                                         # 체크포인트가 있으니 해당 단계는 건너뛰고 이어서 진행
+```
+중단한 경우 논문/기록에 "검증 recall@20 최고 epoch에서 수동 종료"라고 남길 것(조기 종료 규칙과 다름).
+Beauty 실측: align(전 깊이)은 epoch당 약 13.5분이고, 검증 R@20이 0.121 근처에서 0.0001~0.0003씩 갱신되며 35 epoch 이상 이어졌다.

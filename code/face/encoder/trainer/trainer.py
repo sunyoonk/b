@@ -93,6 +93,7 @@ class Trainer(object):
                     best_epoch = epoch_idx
                     best_recall = eval_result['recall'][-1]
                     best_state_dict = deepcopy(model.state_dict())
+                    self.save_inprogress(best_state_dict)   # survives an interrupted run (see save_inprogress)
                 else:
                     now_patience += 1
 
@@ -126,20 +127,33 @@ class Trainer(object):
         self.logger.log_eval(eval_result, configs['test']['k'], data_type='Valid')
         return eval_result
     
+    def ckpt_path(self):
+        model_name = configs['model']['name']
+        save_dir_path = './encoder/checkpoint/{}'.format(model_name)
+        if not os.path.exists(save_dir_path):
+            os.makedirs(save_dir_path)
+        if configs["stage"] == "map":
+            return f"./encoder/checkpoint/{model_name}/{model_name}-{configs['data']['name']}-{configs['train']['seed']}_map{os.environ.get('FACE_CKPT_SUFFIX', '')}.pth"
+        return f"./encoder/checkpoint/{model_name}/{model_name}-{configs['data']['name']}-{configs['train']['seed']}{os.environ.get('FACE_CKPT_SUFFIX', '')}.pth"
+
+    def save_inprogress(self, state_dict):
+        """Write the current best state to <final checkpoint>.inprogress every time validation improves. The final
+        checkpoint itself is still written only when training ends normally (so resume logic that checks for it is
+        unaffected). To stop a long run early without losing it: kill the process, then
+            mv <ckpt>.pth.inprogress <ckpt>.pth
+        Same weights the run would have saved if early stopping had fired at that point (best-so-far state)."""
+        if configs['train']['save_model']:
+            p = self.ckpt_path() + '.inprogress'
+            torch.save(state_dict, p + '.tmp'); os.replace(p + '.tmp', p)
+
     def save_model(self, model):
         if configs['train']['save_model']:
             model_state_dict = model.state_dict()
-            model_name = configs['model']['name']
-            save_dir_path = './encoder/checkpoint/{}'.format(model_name)
-            if not os.path.exists(save_dir_path):
-                os.makedirs(save_dir_path)
-
-            if configs["stage"] == "map":
-                save_model_path = f"./encoder/checkpoint/{model_name}/{model_name}-{configs['data']['name']}-{configs['train']['seed']}_map{os.environ.get('FACE_CKPT_SUFFIX', '')}.pth"
-            else:
-                save_model_path = f"./encoder/checkpoint/{model_name}/{model_name}-{configs['data']['name']}-{configs['train']['seed']}{os.environ.get('FACE_CKPT_SUFFIX', '')}.pth"
+            save_model_path = self.ckpt_path()
             torch.save(model_state_dict, save_model_path)
             print("Save model parameters to {}".format(save_model_path))
+            if os.path.exists(save_model_path + '.inprogress'):
+                os.remove(save_model_path + '.inprogress')
 
 
     def load_model(self, model, pretrain_path):
