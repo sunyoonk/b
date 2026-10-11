@@ -1,0 +1,13 @@
+{
+  "n_users": 22363,
+  "n_items": 12101,
+  "n_train_interactions": 153776,
+  "n_val_interactions": 22363,
+  "n_test_interactions": 22363,
+  "density": 0.0005682471093593328,
+  "n_users_dropped_short_seq": 0,
+  "n_items_missing_text": 0,
+  "rho_item_mean": 0.39285606145858765,
+  "rho_user_mean": 0.44607067108154297,
+  "user_last_n": 10
+}

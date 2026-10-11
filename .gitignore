@@ -1,0 +1,13 @@
+work/
+__pycache__/
+*.pyc
+.venv/
+.pixi/
+code/face/encoder/checkpoint/
+code/rec/runs/
+code/rec/cache
+code/rec/artifacts/
+code/rec/logs/
+code/rec/results/
+inputs/LLMs/
+inputs/rec_datasets/

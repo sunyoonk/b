@@ -1,0 +1,30 @@
+[workspace]
+channels = ["conda-forge"]
+name = "InATTo"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+# Convenience tasks (filled in over later phases)
+
+[dependencies]
+python = "3.12.*"
+pip = "*"
+numpy = ">=1.26,<2.0"
+scipy = "*"
+pandas = "*"
+openpyxl = "*"
+scikit-learn = "*"
+tqdm = "*"
+pyyaml = "*"
+ipython = "*"
+
+[pypi-dependencies]
+# PyTorch (CUDA 12.1 matches the existing system driver)
+torch = { version = ">=2.2,<2.5", index = "https://download.pytorch.org/whl/cu121" }
+transformers = ">=4.40,<4.50"
+sentence-transformers = ">=2.7"
+sentencepiece = "*"
+protobuf = "*"
+openai = ">=1.30"
+python-dotenv = "*"

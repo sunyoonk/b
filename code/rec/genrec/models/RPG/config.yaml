@@ -1,0 +1,69 @@
+# Overwritting configs
+metadata: sentence
+
+# Config the sentence embedding model
+#   Sentence T5
+# sent_emb_model: sentence-transformers/sentence-t5-base
+# sent_emb_dim: 768
+# sent_emb_pca: 128
+#   OpenAI Embedding Model
+sent_emb_model: text-embedding-3-large
+sent_emb_dim: 3072
+sent_emb_pca: 512
+openai_api_key: ~
+
+sent_emb_batch_size: 512
+
+# Config for the backbone model
+max_item_seq_len: 50
+n_embd: 448
+n_layer: 2
+n_head: 4
+n_inner: 1024
+activation_function: gelu_new
+resid_pdrop: 0.0
+embd_pdrop: 0.5
+attn_pdrop: 0.5
+layer_norm_epsilon: 1e-12
+initializer_range: 0.02
+
+# Semantic ID configs
+n_codebook: 32
+codebook_size: 256
+opq_use_gpu: False
+opq_gpu_id: 0
+faiss_omp_num_threads: 32
+
+# RPG configs
+#   model
+temperature: 0.07
+num_beams: 50
+n_edges: 50
+propagation_steps: 3
+#   decoding graph construction
+chunk_size: 1024
+num_workers: 64
+
+# VSID: item-wise variable-length semantic IDs (all off by default -> original RPG)
+mask_mode: none          # none | pvi | random | global | popularity  (none ignores slot_mask_path)
+slot_mask_path: ~        # .npz from scripts/slot_pvi.py (items, mask [N, n_codebook], prior_logp)
+agg_mask: kept           # kept | all : input item embedding = mean over kept slots or over all slots
+score: centered_impute   # rel_logq (AdaRQ main) | centered_impute | entropy_impute | mean_kept | sum_kept | prior_impute (ablations)
+score_temperature: ~     # read-out T for the probability ablations (entropy_impute + T*); ~ = training temperature
+graph: shared_norm       # shared_norm | full : decoding-graph similarity
+user_fold: ~             # A | B : train a PVI probe on half of the users (needs the full-data sem_ids cache)
+fold_seed: 2024
+
+# AdaRQ (all off by default -> original RPG)
+tokenizer_type: opq       # opq (original) | rq_kmeans | rq_vae (not implemented); rq_kmeans uses n_codebook = L_max levels
+rq_kmeans_niter: 20
+rq_pca_whiten: True       # rq_kmeans input: PCA(sent_emb_pca, whiten); sent_emb_pca: 0 -> raw embeddings
+tokenizer_seed: ~         # rq_kmeans PCA / k-means seed; ~ = rand_seed (AdaRQ fixes 2024 for every model seed)
+depth_path: ~             # .npz from scripts/adarq_depth.py (items, depth): level mask l < d_i (input / loss / score / graph)
+slot_weight_path: ~       # .npz (items, weight [N, n_codebook]) -> score = pvi_weighted, every slot kept
+astar_workers: 1          # trie_astar evaluation: parallel processes over users
+also_exact_test: False    # scripts/run_adarq.py: also evaluate test with exact enumeration (graph-decoding loss)
+holdout_fold: ~           # AdaRQ cross-fitted probe: train / early-stop without the users of this fold (0..n_user_folds-1)
+n_user_folds: 5
+val_user_set: all         # all | selection: validation (early stopping) only on the selection users
+selection_user_frac: 0.0  # share of users reserved for early stopping / δ selection (excluded from PVI events)

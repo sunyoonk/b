@@ -1,0 +1,35 @@
+# Parallel (RPG) recommender on adaptive textual IDs (16 aspects x depth 1..4 + dedup = 65 slots, per-slot word vocab)
+run_id: __RUN_ID__
+category: __CATEGORY__
+lr: 0.01
+temperature: 0.03
+num_beams: 20
+n_edges: 200
+propagation_steps: 3
+tokenizer_type: rq_kmeans
+n_codebook: 65
+codebook_size: 4096
+rq_pca_whiten: False
+tokenizer_seed: __TAG__
+sent_emb_model: google/flan-t5-xl
+sent_emb_dim: 2048
+sent_emb_pca: 0
+rq_normalize_residuals: True
+mask_mode: custom
+slot_mask_path: __MASK__
+user_sid_path: __USER__
+agg_mask: kept
+input_drop_slot: -1        # collision ordinal slot (last slot for word IDs without CF slots): excluded from the input mean only
+score: rel_logq
+fit_score_temperature: False
+ablation_scores: [centered]
+graph: shared_norm
+no_graph: True
+also_exact_test: True
+trie_astar_test: False
+loss_norm: item
+val_T: 0.01
+val_beta: 0
+score_norm: mean            # score = mean over active slots of [log p - log q]; no popularity term
+valid_code_mask: True       # per-slot softmax over the codes items use at that slot (W_l); unused codes masked
+logq_active: True            # q_l = training-target code distribution at slot l over targets whose slot l is active (Laplace +1 on W_l)

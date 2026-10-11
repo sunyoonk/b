@@ -1,0 +1,34 @@
+optimizer:
+  name: adam
+  lr: 1.0e-3
+  weight_decay: 0
+
+train:
+  epoch: 3000
+  batch_size: 256
+  save_model: true
+  loss: pairwise
+  test_step: 1
+  patience: 10
+
+test:
+  metrics: [recall, ndcg]
+  k: [5, 10, 20]
+  batch_size: 1024
+
+data:
+  type: general_cf
+
+model:
+  embedding_size: 256
+
+  reg_weight: 1.0e-6
+  # for amazon
+  amazon:
+    reg_weight: 1.0e-6
+  # for yelp
+  yelp:
+    reg_weight: 1.0e-6
+  # for steam
+  steam:
+    reg_weight: 1.0e-6
